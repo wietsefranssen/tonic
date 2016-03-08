@@ -38,8 +38,8 @@ MAX_NC_CHARS = 256
 FILLVALUE_F = default_fillvals[NC_DOUBLE]
 FILLVALUE_I = default_fillvals[NC_INT]
 
-XVAR = 'xc'
-YVAR = 'yc'
+XVAR = 'lon'
+YVAR = 'lat'
 
 # -------------------------------------------------------------------- #
 
@@ -683,9 +683,9 @@ def grid_params(soil_dict, target_grid, snow_dict, veg_dict, veglib_dict,
         out_dicts['veg_dict'][var] = new
 
         # add dummy values for other veg vars
-        #   double root_depth(veg_class, root_zone, nj, ni) ;
-        #   double root_fract(veg_class, root_zone, nj, ni) ;
-        #   double LAI(veg_class, month, nj, ni) ;
+        #   double root_depth(veg_class, root_zone, lat, lon) ;
+        #   double root_fract(veg_class, root_zone, lat, lon) ;
+        #   double LAI(veg_class, month, lat, lon) ;
         for var in ['root_depth', 'root_fract', 'LAI']:
             shape = (nveg_clases, ) + out_dicts['veg_dict'][var].shape[1:]
             new = np.zeros(shape) + FILLVALUE_F
@@ -695,9 +695,9 @@ def grid_params(soil_dict, target_grid, snow_dict, veg_dict, veglib_dict,
 
         # Distribute the veglib variables
         # 1st - the 1d vars
-        #   double lib_overstory(veg_class) ;  --> (veg_class, nj, ni)
+        #   double lib_overstory(veg_class) ;  --> (veg_class, lat, lon)
         for var in ['overstory', 'rarc', 'rmin', 'wind_h', 'RGL', 'rad_atten',
-                    'rad_atten', 'wind_atten', 'trunk_ratio', 'snow_albedo']:
+                    'rad_atten', 'wind_atten', 'trunk_ratio']:
             lib_var = 'lib_{0}'.format(var)
             new = np.zeros((nveg_clases, ysize, xsize)) + FILLVALUE_F
             new[:-1, yi, xi] = veglib_dict[lib_var][:, np.newaxis]
@@ -767,9 +767,9 @@ def write_netcdf(myfile, target_attrs, target_grid,
         v.long_name = "longitude of grid cell center"
 
     else:
-        f.createDimension('nj', target_grid[XVAR].shape[0])
-        f.createDimension('ni', target_grid[YVAR].shape[1])
-        dims2 = ('nj', 'ni', )
+        f.createDimension('lat', target_grid[XVAR].shape[0])
+        f.createDimension('lon', target_grid[YVAR].shape[1])
+        dims2 = ('lat', 'lon', )
         coordinates = "{0} {1}".format(XVAR, YVAR)
 
         v = f.createVariable(YVAR, NC_DOUBLE, dims2)
@@ -783,7 +783,7 @@ def write_netcdf(myfile, target_attrs, target_grid,
         # corners
         if ('xv' in target_grid) and ('yv' in target_grid):
             f.createDimension('nv4', 4)
-            dims_corner = ('nv4', 'nj', 'ni', )
+            dims_corner = ('nv4', 'lat', 'lon', )
 
             v = f.createVariable('xv', NC_DOUBLE, dims_corner)
             v[:, :, :] = target_grid['xv']
@@ -818,6 +818,10 @@ def write_netcdf(myfile, target_attrs, target_grid,
             v = f.createVariable(var, NC_DOUBLE, ('nlayer', ),
                                  fill_value=FILLVALUE_F)
             v[:] = data
+
+        elif var in ['fs_active']:
+            v = f.createVariable(var, NC_INT, dims2, fill_value=FILLVALUE_I)
+            v[:, :] = data
 
         elif data.ndim == 2:
             v = f.createVariable(var, NC_DOUBLE, dims2, fill_value=FILLVALUE_F)
@@ -886,6 +890,12 @@ def write_netcdf(myfile, target_attrs, target_grid,
                 v = f.createVariable(var, NC_DOUBLE, dims2,
                                      fill_value=FILLVALUE_F)
                 v[:, :] = data
+
+            elif var in ['overstory']:
+                mycoords = ('veg_class', ) + dims2
+                v = f.createVariable(var, NC_INT, mycoords,
+                                     fill_value=FILLVALUE_I)
+                v[:, :, :] = data
 
             elif veg_grid[var].ndim == 3:
                 mycoords = ('veg_class', ) + dims2

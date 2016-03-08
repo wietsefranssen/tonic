@@ -7,6 +7,10 @@ TONIC
 
 This is truly a work in progress...
 
+## WUR specific branch
+just update `tonic` by going to the tonic path and type:
+`python setup.py install` again
+
 ## Models:
 1. [Variable Infiltration Capacity (VIC) model](https://github.com/UW-Hydro/VIC)
 1. [Community Land Model (CLM)](http://www.cgd.ucar.edu/tss/clm/)
