@@ -886,7 +886,12 @@ def write_netcdf(myfile, target_attrs, target_grid,
         for var, data in veg_grid.items():
             print('writing var: {0} {1}'.format(var, data.shape))
 
-            if veg_grid[var].ndim == 2:
+            if var in ['Nveg']:
+                v = f.createVariable(var, NC_INT, dims2, 
+				     fill_value=FILLVALUE_I)
+                v[:, :] = data
+
+            elif veg_grid[var].ndim == 2:
                 v = f.createVariable(var, NC_DOUBLE, dims2,
                                      fill_value=FILLVALUE_F)
                 v[:, :] = data
@@ -1035,7 +1040,7 @@ def veg(veg_file, soil_dict, max_roots=3, veg_classes=11,
     cell = 0
     while row < len(lines):
         line = lines[row].strip('\n').split(' ')
-        gridcel[cell], nveg[cell] = np.array(line).astype(int)
+        gridcel[cell], nveg[cell], dummy = np.array(line).astype(int)
         numrows = nveg[cell] * lfactor + row
         row += 1
 
