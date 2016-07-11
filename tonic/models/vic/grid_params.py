@@ -1500,7 +1500,7 @@ def veg(veg_file, soil_dict, veg_classes=11, max_roots=3,
     cell = 0
     while row < len(lines):
         line = lines[row].strip('\n').split(' ')
-        gridcel[cell], nveg[cell] = np.array(line).astype(int)
+        gridcel[cell], nveg[cell], dummy = np.array(line).astype(int)
         numrows = nveg[cell] * lfactor + row + 1
         row += 1
 
@@ -1512,8 +1512,8 @@ def veg(veg_file, soil_dict, veg_classes=11, max_roots=3,
             cv[cell, vind] = temp[1]
 
             tmp = 1 + max_roots * 2
-            root_depth[cell, vind, :] = temp[2:tmp:2]
-            root_fract[cell, vind, :] = temp[3:1+tmp:2]
+            root_depth[cell, vind, :2] = temp[2:tmp:2]
+            root_fract[cell, vind, :2] = temp[3:1+tmp:2]
             tmp += 1
 
             if blowing_snow:
